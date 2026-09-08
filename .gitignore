@@ -1,0 +1,9 @@
+data/processed/fact_orders.csv
+data/processed/fact_items.csv
+data/processed/dim_customers.csv
+data/processed/olist.db
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/

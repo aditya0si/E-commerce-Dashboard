@@ -1,71 +1,51 @@
-# E-commerce Data Analytics Pipeline
+# Olist E-commerce BI
 
-This project is a starter structure for an analytics pipeline built with Python, PostgreSQL, and Streamlit.
+Deployable BI product over the Brazilian Olist marketplace dataset
+(99,441 orders, Sep 2016 – Oct 2018). Headline: **R$ 13.22M delivered revenue**
+across **96,478 delivered orders** (AOV R$ 137.04).
 
-## Project Structure
+## Pages (Streamlit)
 
-```text
-.
-|-- data/
-|   |-- external/
-|   |-- processed/
-|   `-- raw/
-|-- dashboard/
-|   |-- pages/
-|   `-- app.py
-|-- notebooks/
-|-- scripts/
-|   |-- __init__.py
-|   |-- config.py
-|   |-- extract.py
-|   |-- load.py
-|   |-- pipeline.py
-|   `-- transform.py
-|-- sql/
-|   |-- analytics_views.sql
-|   |-- schema.sql
-|   `-- seed_queries.sql
-|-- .env.example
-|-- requirements.txt
-`-- README.md
+| Page | Content |
+|---|---|
+| Home | KPI snapshot + how-to-read |
+| Overview | revenue trend, seasonality, payment mix, top states |
+| Category | revenue / orders / AOV / share by category |
+| Cohorts / Retention | monthly cohort retention matrix |
+| Customers / RFM | RFM segments + realised LTV |
+| Funnel | created → approved → carrier → delivered → reviewed |
+
+Metric definitions: [`METRICS.md`](METRICS.md). Validation: [`docs/EVAL.md`](docs/EVAL.md).
+
+## Quickstart (local)
+
+```bash
+pip install -r requirements.txt
+python -m scripts.pipeline      # builds data/processed/ + SQLite marts + views
+python -m pytest tests/ -q      # 8 passed
+streamlit run dashboard/app.py  # http://localhost:8501
 ```
 
-## Stack
+Notebook: `notebooks/eda.ipynb` (regenerate with `python scripts/build_notebook.py`;
+every finding recomputes from `data/raw/`).
 
-- Python with `pandas` for extraction and transformation
-- PostgreSQL for storage and analytics-ready tables/views
-- Streamlit for dashboarding
+## Deploy (Streamlit Community Cloud, free)
 
-## Setup
+1. Push this repo to GitHub (make it public) — `data/raw/*.csv` is already tracked.
+2. Go to <https://share.streamlit.io> → New app → select repo/branch →
+   main file path **`dashboard/app.py`**.
+3. No secrets needed. On first launch the app builds its SQLite marts from
+   `data/raw/` automatically (≈1 min cold start, then cached).
+4. Optional PostgreSQL: set `POSTGRES_*` in `.env` (see `.env.example`),
+   `pip install sqlalchemy psycopg2-binary`, run `python -m scripts.pipeline --postgres`.
 
-1. Create a virtual environment.
-2. Install dependencies:
+## Layout
 
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. Copy `.env.example` to `.env` and update your PostgreSQL credentials.
-4. Create the database and run the SQL in `sql/schema.sql`.
-5. Place source files in `data/raw/`.
-6. Run the pipeline:
-
-   ```bash
-   python -m scripts.pipeline
-   ```
-
-7. Start the dashboard:
-
-   ```bash
-   streamlit run dashboard/app.py
-   ```
-
-## Notes
-
-- `data/raw/` holds original source files.
-- `data/processed/` holds cleaned or transformed exports.
-- `data/external/` is for third-party datasets.
-- `scripts/` contains pipeline logic.
-- `sql/` contains schema and analytics SQL.
-- `dashboard/` contains the Streamlit app.
-- `notebooks/` is for exploration and prototyping.
+```text
+sql/schema.sql            # real Olist table definitions (SQLite + Postgres)
+sql/analytics_views.sql   # 6 BI views: daily_revenue, category, cohort, RFM, funnel, LTV
+scripts/olist_marts.py    # raw CSVs -> fact_orders / dim_customers / fact_items + olist.db
+dashboard/                # app.py + 5 pages, shared layer in _data.py
+tests/test_views.py       # consistency tests, expectations recomputed from raw CSVs
+METRICS.md / docs/EVAL.md # metric definitions / validation notes
+```

@@ -1,17 +1,28 @@
-from scripts.extract import extract_sales_data
-from scripts.config import PROCESSED_DIR
-from scripts.load import load_to_postgres
-from scripts.transform import transform_sales_data
+"""Pipeline entry point: build Olist marts (CSV + SQLite). PostgreSQL optional."""
+from __future__ import annotations
+
+import argparse
+
+from scripts.olist_marts import build_marts
 
 
-def run_pipeline() -> None:
-    df = extract_sales_data()
-    transformed_df = transform_sales_data(df)
-    PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
-    transformed_df.to_csv(PROCESSED_DIR / "sales_clean.csv", index=False)
-    load_to_postgres(transformed_df)
+def run_pipeline(to_postgres: bool = False) -> dict:
+    summary = build_marts()
+    if to_postgres:
+        from scripts.load import load_to_postgres
+        import pandas as pd
+        from scripts.config import PROCESSED_DIR
+        fact = pd.read_csv(PROCESSED_DIR / "fact_orders.csv")
+        load_to_postgres(fact, table_name="fact_orders")
     print("Pipeline completed successfully.")
+    return summary
 
 
 if __name__ == "__main__":
-    run_pipeline()
+    parser = argparse.ArgumentParser(description="Build Olist marts.")
+    parser.add_argument("--postgres", action="store_true",
+                        help="Also load fact_orders into PostgreSQL (needs SQLAlchemy + .env)")
+    args = parser.parse_args()
+    summary = run_pipeline(to_postgres=args.postgres)
+    for k, v in summary.items():
+        print(f"{k}={v}")

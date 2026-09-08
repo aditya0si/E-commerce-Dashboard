@@ -1,0 +1,7 @@
+orders_total=99441
+orders_delivered=96478
+revenue_items_delivered=13221498.11
+revenue_payments_total=16008872.12
+customers_unique=96096
+date_min=2016-09-04
+date_max=2018-10-17

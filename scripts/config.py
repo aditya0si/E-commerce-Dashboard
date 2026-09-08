@@ -1,7 +1,11 @@
 from pathlib import Path
 import os
 
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
+except ImportError:  # minimal installs (e.g. Streamlit Cloud) skip .env loading
+    def load_dotenv(*a, **k):
+        return False
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
